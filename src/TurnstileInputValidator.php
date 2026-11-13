@@ -29,6 +29,13 @@ class TurnstileInputValidator extends Validator
     /** @var string */
     public $configComponentName = 'turnstile';
 
+    /**
+     * @var bool Whether to skip verification for AJAX requests (e.g. ActiveForm AJAX validation).
+     * The `X-Requested-With` header is set by the client, so enable it only when the AJAX request never
+     * performs the protected action, otherwise anyone can bypass the captcha by sending this header.
+     */
+    public $skipOnAjax = false;
+
     public function __construct(
         $secret = null,
         $siteVerifyUrl = null,
@@ -62,20 +69,16 @@ class TurnstileInputValidator extends Validator
      */
     protected function validateValue($value)
     {
-        if (Yii::$app->request->isAjax) {
+        if ($this->skipOnAjax && Yii::$app->request->isAjax) {
             return null;
         }
 
         if ($this->isValid === null) {
-            if (!$value) {
+            if (!is_string($value) || $value === '') {
                 $this->isValid = false;
             } else {
                 $response = $this->getResponse($value);
-                if (!isset($response['success'])) {
-                    throw new Exception('Invalid site verify response.');
-                }
-
-                $this->isValid = $response['success'] === true;
+                $this->isValid = is_array($response) && isset($response['success']) && $response['success'] === true;
             }
         }
 

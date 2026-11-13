@@ -69,3 +69,8 @@ class Account extends Model
     }
 }
 ```
+
+The token is always verified with the siteverify endpoint. AJAX requests are verified too: the `X-Requested-With`
+header is controlled by the client. If a form uses ActiveForm AJAX validation and the AJAX request never performs
+the protected action, set `'skipOnAjax' => true` to avoid spending the single-use token on it.
+
